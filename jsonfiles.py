@@ -4,10 +4,11 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
-# DEFINE THE FOLLOWING VARIABLES BEFORE RUNNING THIS SCRIPT
-# Remember to skip the years and months that we already have
-start_year = 2012
-start_month = 3
+# Remember to skip the years and months that we already have data for
+if os.path.exists("start.txt"):
+    start_year = int(open("start.txt", "r").read().split("-")[0])
+    start_month = int(open("start.txt", "r").read().split("-")[1])
+
 
 
 def get_files_from_tar_file(url):
@@ -59,7 +60,8 @@ tweetfiles = json.loads(open("tweetfiles.json", "r").read())
 
 
 # for each tar/zip file, get the list of files inside it
-
+# Usually takes 1-2 minutes to run per tar/zip file, if the status code is 200. 
+# Sometimes the status code starts with 5 when the server is busy, and the script will retry until it gets a 200 status code. If you see a 5 status code, don't worry, it will retry automatically. But you can stop the script and redownload again later if you want.
 for year in tweetfiles.keys():
     
     # If we already have enough data for those years, skip them
@@ -85,4 +87,9 @@ for year in tweetfiles.keys():
 
             open(f"{save_to_folder}/{tar_file_name}.json", "w").write(json.dumps(files))
 
-        open("url_download.log", "a").write(f"{year}-{month:02d}\n")
+        next_month = int(month) + 1
+        next_year = int(year)
+        if next_month > 12:
+            next_month = 1
+            next_year += 1        
+        open("start.txt", "w").write(f"{next_year}-{next_month}")
