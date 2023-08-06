@@ -71,9 +71,11 @@ for year in tweetfiles.keys():
         if(int(year) == start_year and int(month) <= start_month - 1):
             continue
 
+        save_to_folder = f"data/{year}/{int(month):02d}"
+
         # if directory not created, create it
-        if not os.path.exists(f"data/{year}/{month:02d}"):
-            os.makedirs(f"data/{year}/{month:02d}")
+        if not os.path.exists(save_to_folder):
+            os.makedirs(save_to_folder)
 
         for folder_url in tweetfiles[year][month].keys():
 
@@ -81,6 +83,6 @@ for year in tweetfiles.keys():
 
             folder_name = folder_url.split("/")[-2]
 
-            open(f"{year}/{month}/{folder_name}.json", "w").write(json.dumps(files))
+            open(f"{save_to_folder}.json", "w").write(json.dumps(files))
 
         open("url_download.log", "a").write(f"{year}-{month:02d}\n")
