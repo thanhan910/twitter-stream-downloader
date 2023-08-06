@@ -74,7 +74,6 @@ def process_tar_file(year, month, tar_file_url):
 
 if __name__ == "__main__":
     tweetfiles = json.loads(open("tweetfiles.json", "r").read())
-    completed_tweetfiles = json.loads(open("completed.json", "r").read())
     
     with open("completed.txt", 'r') as file:
         completed_files = file.read().splitlines()
