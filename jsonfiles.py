@@ -4,9 +4,8 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 import concurrent.futures
-import signal
-import sys
 
+# It took 4 hours to download all
 
 def get_files_from_tar_file(url):
     # Given an url of the tar file on the Internet Archive, return a list of URLs of the files inside the tar file.
@@ -15,40 +14,42 @@ def get_files_from_tar_file(url):
 
     response = requests.get(url)
 
-    print(f"{response.status_code} {url}")
+    print(f"[{response.status_code}] {url}")
 
     while response.status_code != 200:
 
-        print(f"Failed to fetch URL: {url}")
+        print(f"[Failed to fetch URL:] {url}")
 
         status_code = response.status_code
 
         if str(status_code).startswith("5"):
-            print("Server error. Retrying...")
+            print("[Server error. Retrying...]")
             response = requests.get(url)
-            print(f"{response.status_code} {url}")
+            print(f"[{response.status_code}] {url}")
             continue
 
         elif str(status_code).startswith("4"):
-            print(f"Client error. Aborting... {url}")
+            print(f"[Client error. Aborting...] {url}")
             return []
 
         else:
-            print(f"Unknown error. Aborting... {url}")
+            print(f"[Unknown error. Aborting...] {url}")
             return []
 
     soup = BeautifulSoup(response.content, "html.parser")
 
-    print(f"Finish parsing HTML as soup {url}")
+    print(f"[Finish parsing HTML as soup] {url}")
 
     files = []
 
     for link in soup.find_all("a", href=True):
         # if link['href'].endswith('.gz'):
         absolute_url = urljoin(url, link["href"])
-        files.append(absolute_url)
+        file_name = absolute_url.split("/")[-1]
+        if(file_name.endswith(".gz") or file_name.endswith(".bz2")):
+            files.append(file_name)
 
-    print(f"Finish getting href list {url}")
+    print(f"[Finish getting href list] {url}")
 
     return files
 
@@ -64,9 +65,9 @@ def process_tar_file(year, month, tar_file_url):
     
     tar_file_name = tar_file_url.split("/")[-2]
     
-    with open(f"{save_to_folder}/{tar_file_name}.json", "w") as file:
-        file.write(json.dumps(files))
-        print(f"Saved {tar_file_name}.json")
+    with open(f"{save_to_folder}/{tar_file_name}.txt", "w") as file:
+        file.write('\n'.join(files))
+        print(f"[Saved] {tar_file_name}")
     
     with open("completed.txt", 'a') as file:
         file.write(f"{tar_file_url}\n")
