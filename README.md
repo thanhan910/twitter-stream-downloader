@@ -13,8 +13,8 @@ The `tweetfiles.json` file is a list of urls to the .tar and .zip files in the c
 data
 ├── <year>
 │   ├── <month>
-│   │   ├── <tar/zip file>.json <--- Contains urls to .json.bz2 or .json.gz files 
-│   │   ├── <tar/zip file>.json
+│   │   ├── <tar/zip file>.txt <--- Contains urls to .json.bz2 or .json.gz files 
+│   │   ├── <tar/zip file>.txt
 ```
 
 You can use the `combine_data.py` script to combine all json files in the `data` folder and store them in the `data.json` file. However, the file will be extremely big.
