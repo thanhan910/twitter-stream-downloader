@@ -77,12 +77,12 @@ for year in tweetfiles.keys():
         if not os.path.exists(save_to_folder):
             os.makedirs(save_to_folder)
 
-        for folder_url in tweetfiles[year][month].keys():
+        for tar_file_url in tweetfiles[year][month].keys():
 
-            files = get_files_from_tar_file(folder_url)
+            files = get_files_from_tar_file(tar_file_url)
 
-            folder_name = folder_url.split("/")[-2]
+            tar_file_name = tar_file_url.split("/")[-2]
 
-            open(f"{save_to_folder}.json", "w").write(json.dumps(files))
+            open(f"{save_to_folder}/{tar_file_name}.json", "w").write(json.dumps(files))
 
         open("url_download.log", "a").write(f"{year}-{month:02d}\n")
