@@ -3,12 +3,9 @@ import os
 from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
-
-# Remember to skip the years and months that we already have data for
-if os.path.exists("start.txt"):
-    start_year = int(open("start.txt", "r").read().split("-")[0])
-    start_month = int(open("start.txt", "r").read().split("-")[1])
-
+import concurrent.futures
+import signal
+import sys
 
 
 def get_files_from_tar_file(url):
@@ -18,7 +15,7 @@ def get_files_from_tar_file(url):
 
     response = requests.get(url)
 
-    print(response.status_code)
+    print(f"{response.status_code} {url}")
 
     while response.status_code != 200:
 
@@ -29,20 +26,20 @@ def get_files_from_tar_file(url):
         if str(status_code).startswith("5"):
             print("Server error. Retrying...")
             response = requests.get(url)
-            print(response.status_code)
+            print(f"{response.status_code} {url}")
             continue
 
         elif str(status_code).startswith("4"):
-            print("Client error. Aborting...")
+            print(f"Client error. Aborting... {url}")
             return []
 
         else:
-            print("Unknown error. Aborting...")
+            print(f"Unknown error. Aborting... {url}")
             return []
 
     soup = BeautifulSoup(response.content, "html.parser")
 
-    print("Finish parsing HTML as soup")
+    print(f"Finish parsing HTML as soup {url}")
 
     files = []
 
@@ -51,45 +48,47 @@ def get_files_from_tar_file(url):
         absolute_url = urljoin(url, link["href"])
         files.append(absolute_url)
 
-    print("Finish getting href list")
+    print(f"Finish getting href list {url}")
 
     return files
-
-# Load the filenames from the json file
-tweetfiles = json.loads(open("tweetfiles.json", "r").read())
-
 
 # for each tar/zip file, get the list of files inside it
 # Usually takes 1-2 minutes to run per tar/zip file, if the status code is 200. 
 # Sometimes the status code starts with 5 when the server is busy, and the script will retry until it gets a 200 status code. If you see a 5 status code, don't worry, it will retry automatically. But you can stop the script and redownload again later if you want.
-for year in tweetfiles.keys():
+
+def process_tar_file(year, month, tar_file_url):
+
+    files = get_files_from_tar_file(tar_file_url)
+
+    save_to_folder = f"data/{year}/{int(month):02d}"
     
-    # If we already have enough data for those years, skip them
-    if(int(year) <= start_year - 1):
-        continue
+    tar_file_name = tar_file_url.split("/")[-2]
+    
+    with open(f"{save_to_folder}/{tar_file_name}.json", "w") as file:
+        file.write(json.dumps(files))
+        print(f"Saved {tar_file_name}.json")
+    
+    with open("completed.txt", 'a') as file:
+        file.write(f"{tar_file_url}\n")
 
-    for month in tweetfiles[year].keys():
-        # If we already have enough data for those months in that year, skip them
-        if(int(year) == start_year and int(month) <= start_month - 1):
-            continue
 
-        save_to_folder = f"data/{year}/{int(month):02d}"
+if __name__ == "__main__":
+    tweetfiles = json.loads(open("tweetfiles.json", "r").read())
+    completed_tweetfiles = json.loads(open("completed.json", "r").read())
+    
+    with open("completed.txt", 'r') as file:
+        completed_files = file.read().splitlines()
 
-        # if directory not created, create it
-        if not os.path.exists(save_to_folder):
-            os.makedirs(save_to_folder)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for year in tweetfiles.keys():
+            for month in tweetfiles[year].keys():
+                save_to_folder = f"data/{year}/{int(month):02d}"
+                
+                if not os.path.exists(save_to_folder):
+                    os.makedirs(save_to_folder)
 
-        for tar_file_url in tweetfiles[year][month].keys():
+                for tar_file_url in tweetfiles[year][month].keys():
+                    if tar_file_url in completed_files:
+                        continue
 
-            files = get_files_from_tar_file(tar_file_url)
-
-            tar_file_name = tar_file_url.split("/")[-2]
-
-            open(f"{save_to_folder}/{tar_file_name}.json", "w").write(json.dumps(files))
-
-        next_month = int(month) + 1
-        next_year = int(year)
-        if next_month > 12:
-            next_month = 1
-            next_year += 1        
-        open("start.txt", "w").write(f"{next_year}-{next_month}")
+                    executor.submit(process_tar_file, year, month, tar_file_url)
