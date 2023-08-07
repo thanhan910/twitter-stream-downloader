@@ -1,3 +1,7 @@
+import json
+import bz2
+import gzip
+from urllib.request import urlopen
 import os
 
 def get_download_urls(year, month, day = None, hour = None, minute = None):
@@ -26,7 +30,7 @@ def get_download_urls(year, month, day = None, hour = None, minute = None):
         if(year == 2013 and month == 12):
             potential_pattern.append(f"{year}/{month:02d}-b/{day:02d}/{hour:02d}/{minute:02d}")
 
-    print(potential_pattern)
+    print("potential_pattern:", potential_pattern)
     # Get all potential urls
     potential_urls = []
     for dirpath, dirnames, filenames in os.walk(f"data/{year}/{month:02d}"):
@@ -37,13 +41,36 @@ def get_download_urls(year, month, day = None, hour = None, minute = None):
                 base_url = f"https://archive.org/download/archiveteam-twitter-json-2011/twitter-json-scrape-2011-{month:02d}.zip"
             for pattern in potential_pattern:
                 potential_urls.extend([f"{base_url}/{line}" for line in data if(pattern in line)])
+    print("potential_urls:", potential_urls)
 
     return potential_urls
 
 
-year = 2021
-month = 1
-day = 1
-hour = 1
-minute = 30
-print(get_download_urls(year, month, day, hour, minute))
+
+
+def read_compressed_json(url):
+    # try:
+        with urlopen(url) as response:
+            if url.endswith('.json.bz2'):
+                with bz2.open(response, 'rt', encoding='utf-8') as file:
+                    data = [json.loads(line) for line in file.readlines()]
+            elif url.endswith('.json.gz'):
+                with gzip.open(response, 'rt', encoding='utf-8') as file:
+                    data = [json.loads(line) for line in file.readlines()]
+            else:
+                raise ValueError("Unsupported file format. Only .json.bz2 and .json.gz are supported.")
+
+        return data
+
+    # except Exception as e:
+    #     print(f"Error: {e}")
+    #     return None
+
+# Example usage
+
+urls = get_download_urls(2020, 10, 2)
+for url in urls:
+    json_data = read_compressed_json(url)
+    if json_data:
+        print(json_data)
+    break

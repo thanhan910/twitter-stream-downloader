@@ -3,9 +3,13 @@ A collection of urls to the compressed JSON files tweets on the Twitter Stream A
 
 ## How to use this dataset
 
-You can use this dataset to scrape tweets from https://archive.org/details/twitterstream
+You can use this dataset and the functions in `usage.py` to scrape tweets from https://archive.org/details/twitterstream
 
-You can use the `get_download_urls` function in the `get_download_urls.py` to get the urls of the compressed `.json.bz2` and `.json.gz` files that can contains the tweets.
+You can use the `get_download_urls` to get the urls of the compressed `.json.bz2` and `.json.gz` files that can contains the tweets in a specific year, month, day, hour, minute.
+
+Then you can use the `read_compressed_json` to download and read the compressed json files.
+
+## Details
 
 In this collection: https://archive.org/details/twitterstream, there are a number of .tar and .zip files that contains the JSON files of tweets. This repository contains a list of urls to these files, stored in `tweetfiles.json`. Those urls are collected using the  `tarfiles.py` script.
 
