@@ -120,7 +120,7 @@ def read_compressed_json(url):
 
 # Example usage
 
-urls = get_download_urls_using_stored_data_on_github(2020, 10, 2)
+urls = get_download_urls_using_stored_data_on_github(2022, 11, 1)
 for url in urls:
     json_data = read_compressed_json(url)
     if json_data:
