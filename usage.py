@@ -120,9 +120,9 @@ def read_compressed_json(url):
 
 # Example usage
 
-urls = get_download_urls_using_stored_data_on_github(2022, 11, 1)
-for url in urls:
-    json_data = read_compressed_json(url)
-    if json_data:
-        print(json_data)
-    break
+def get_tweets(year, month, day = None, hour = None, minute = None):
+    urls = get_download_urls_using_stored_data_on_github(year, month, day, hour, minute)
+    json_data = {}
+    for url in urls:
+        json_data[url] = read_compressed_json(url)
+    return json_data
