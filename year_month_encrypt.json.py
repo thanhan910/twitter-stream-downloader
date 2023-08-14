@@ -173,14 +173,13 @@ for values in year_months:
     year_months_encrypt[values[0]][values[1]][values[2]] = []
 
     for pattern in year_months[values]:
+        tar_file = pattern[0]
         if(len(pattern) == 3):
-            year_folder = pattern[0]
-            month_folder = pattern[1]
-            tar_file = pattern[2]
+            year_folder = pattern[1]
+            month_folder = pattern[2]
         elif(len(pattern) == 1):
             year_folder = values[0]
             month_folder = values[1]
-            tar_file = pattern[0]
         tar_file = regex_tar_patterns_decrypt_str[tar_file].format(*values)
         
         bz2_files = open(os.path.join('data', year_folder, month_folder, tar_file), "r").read().split("\n")
