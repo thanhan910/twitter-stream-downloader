@@ -2,98 +2,119 @@ import json
 import bz2
 import gzip
 from urllib.request import urlopen
-import os
 
-def get_potential_patterns(year, month, day = None, hour = None, minute = None):
-    if(day == None):
-        potential_pattern = [f"{month:02d}/", f"{year}{month:02d}"]
 
-        if(year == 2013 and month == 12):
-            potential_pattern.append(f"{year}/{month:02d}-b/")
-    
-    elif(hour == None):
-        potential_pattern = [f"{month:02d}/{day:02d}/", f"{year}{month:02d}{day:02d}"]
+def tar_pattern_decrypt(pattern_code, year, month, day):
 
-        if(year == 2013 and month == 12):
-            potential_pattern.append(f"{year}/{month:02d}-b/{day:02d}/")
+    regex_tar_patterns_decrypt_str = {
+        1: r"twitter-json-scrape-{}-{}.zip",
+        2: r"archiveteam-twitter-{}-{}.tar",
+        3: r"archiveteam-twitter-stream-{}-{}.tar",
+        4: r"archiveteam-twitter-stream-{}-{}-b.tar",
+        5: r"twitter-stream-{}-{}-{}.tar",
+        6: r"twitter-{}-{}-{}.tar",
+        7: r"twitter_stream_{}_{}_{}.tar",
+        8: r"twitter-stream-{}-{}-{}.zip",
+        9: r"twitter-stream-{}{}{}.tar",
+    }
 
-    elif(minute == None):
-        potential_pattern = [f"{month:02d}/{day:02d}/{hour:02d}/", f"{year}{month:02d}{day:02d}{hour:02d}"]
+    return regex_tar_patterns_decrypt_str[pattern_code].format(year, month, day)
 
-        if(year == 2013 and month == 12):
-            potential_pattern.append(f"{year}/{month:02d}-b/{day:02d}/{hour:02d}/")
+def bz2_pattern_decrypt(pattern_code, year, month, day, hour, minute):
+    regex_bz2_patterns_decrypt_meaning = {
+        1: r"(\d{4})/(\d{2})/(\d{2})/(\d{2})/(\d{2}).json.bz2",
+        2: r"(\d{4})/(\d{2})-b/(\d{2})/(\d{2})/(\d{2}).json.bz2",
+        3: r"(\d{2})/(\d{2})/(\d{2})/(\d{2}).json.bz2",
+        4: r"(\d{2})/(\d{2})/(\d{2}).json.bz2",
+        5: r"(\d{4})/(\d{2})/(\d{2})/(\d{2})/(\d{2}).json.gz",
+        6: r"(\d{4})(\d{2})(\d{2})/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})00.json.gz",
+    }
 
+    if pattern_code == 1:
+        return f"{year}/{month}/{day}/{hour}/{minute}.json.bz2"
+    elif pattern_code == 2:
+        return f"{year}/{month}-b/{day}/{hour}/{minute}.json.bz2"
+    elif pattern_code == 3:
+        return f"{month}/{day}/{hour}/{minute}.json.bz2"
+    elif pattern_code == 4:
+        return f"{day}/{hour}/{minute}.json.bz2"
+    elif pattern_code == 5:
+        return f"{year}/{month}/{day}/{hour}/{minute}.json.gz"
+    elif pattern_code == 6:
+        return f"{year}{month}{day}/{year}{month}{day}{hour}{minute}00.json.gz"
     else:
-        potential_pattern = [f"{month:02d}/{day:02d}/{hour:02d}/{minute:02d}", f"{year}{month:02d}{day:02d}{hour:02d}{minute:02d}"]
-
-        if(year == 2013 and month == 12):
-            potential_pattern.append(f"{year}/{month:02d}-b/{day:02d}/{hour:02d}/{minute:02d}")
-
-    return potential_pattern
-
-def get_download_urls_using_local_data(year, month, day = None, hour = None, minute = None):
-
-    if(day == None):
-        potential_pattern = [f"{month:02d}/", f"{year}{month:02d}"]
-
-        if(year == 2013 and month == 12):
-            potential_pattern.append(f"{year}/{month:02d}-b/")
+        return None
     
-    elif(hour == None):
-        potential_pattern = [f"{month:02d}/{day:02d}/", f"{year}{month:02d}{day:02d}"]
 
-        if(year == 2013 and month == 12):
-            potential_pattern.append(f"{year}/{month:02d}-b/{day:02d}/")
 
-    elif(minute == None):
-        potential_pattern = [f"{month:02d}/{day:02d}/{hour:02d}/", f"{year}{month:02d}{day:02d}{hour:02d}"]
+def format_to_string(year, month, day, hour, minute):
+    year = str(year) if year != None else None
+    month = f'{int(month):02d}' if month != None else None
+    day = f'{int(day):02d}' if day != None else None
+    hour = f'{int(hour):02d}' if hour != None else None
+    minute = f'{int(minute):02d}' if minute != None else None
+    return year, month, day, hour, minute    
 
-        if(year == 2013 and month == 12):
-            potential_pattern.append(f"{year}/{month:02d}-b/{day:02d}/{hour:02d}/")
 
+def get_download_urls(year, month, day = None, hour = None, minute = None):
+
+    year, month, day, hour, minute = format_to_string(year, month, day, hour, minute)
+    
+    url_pattern_encrypted_data = json.load(open("year_month_encrypt.json", "r"))
+
+    if(year not in url_pattern_encrypted_data):
+        return []
+    if(month not in url_pattern_encrypted_data[year]):
+        return []
+    
+    days_list = []
+    if(day in url_pattern_encrypted_data[year][month]):
+        days_list = [day]
+    elif(day == None):
+        days_list = url_pattern_encrypted_data[year][month].keys()
     else:
-        potential_pattern = [f"{month:02d}/{day:02d}/{hour:02d}/{minute:02d}", f"{year}{month:02d}{day:02d}{hour:02d}{minute:02d}"]
-
-        if(year == 2013 and month == 12):
-            potential_pattern.append(f"{year}/{month:02d}-b/{day:02d}/{hour:02d}/{minute:02d}")
-
-    print("potential_pattern:", potential_pattern)
-    # Get all potential urls
-    potential_urls = []
-    for dirpath, dirnames, filenames in os.walk(f"data/{year}/{month:02d}"):
-        for filename in [f for f in filenames if f.endswith(".txt")]:
-            data = open(os.path.join(dirpath, filename), "r").read().split("\n")
-            base_url = f"https://archive.org/download/archiveteam-twitter-stream-{year}-{month:02d}/{filename.removesuffix('.txt')}"
-            if(year == 2011):
-                base_url = f"https://archive.org/download/archiveteam-twitter-json-2011/twitter-json-scrape-2011-{month:02d}.zip"
-            for pattern in potential_pattern:
-                potential_urls.extend([f"{base_url}/{line}" for line in data if(pattern in line)])
-    print("potential_urls:", potential_urls)
-
-    return potential_urls
-
-def get_download_urls_using_stored_data_on_github(year, month, day = None, hour = None, minute = None):
-
-    potential_pattern = get_potential_patterns(year, month, day, hour, minute)
-
-    
-    # Get all potential urls
+        if("00" not in url_pattern_encrypted_data[year][month]):
+            return []
+        else:
+            days_list = ["00"]
 
     potential_urls = []
 
-    filenames = json.loads(urlopen('https://raw.githubusercontent.com/thanhan910/twitter-stream-json-urls/main/data_folder_structure.json').read().decode())[str(year)][str(month).zfill(2)]
+    for day in days_list:
 
-    print(filenames)
+        pattern_codes_list = url_pattern_encrypted_data[year][month][day]
+
+        for pattern_codes in pattern_codes_list:
+
+            # Get tar file name
+            tar_pattern_code = pattern_codes[0]
+            tar_file = tar_pattern_decrypt(tar_pattern_code[0], year, month, day)
+
+            # Get base url
+
+            if(len(tar_pattern_code) == 3):
+                year_folder = tar_pattern_code[1]
+                month_folder = tar_pattern_code[2]
+            else:
+                year_folder = year
+                month_folder = month
+
+            base_url = f"https://archive.org/download/archiveteam-twitter-json-2011" if(year_folder == '2011') else f"https://archive.org/download/archiveteam-twitter-stream-{year_folder}-{month_folder}"
 
 
-    for filename in [f for f in filenames if f.endswith(".txt")]:
-        data = urlopen(f"https://raw.githubusercontent.com/thanhan910/twitter-stream-json-urls/main/data/{year}/{month:02d}/{filename}").read().decode().split("\n")
-        base_url = f"https://archive.org/download/archiveteam-twitter-stream-{year}-{month:02d}/{filename.removesuffix('.txt')}"
-        if(year == 2011):
-            base_url = f"https://archive.org/download/archiveteam-twitter-json-2011/twitter-json-scrape-2011-{month:02d}.zip"
-        for pattern in potential_pattern:
-            potential_urls.extend([f"{base_url}/{line}" for line in data if(pattern in line)])
-    print("potential_urls:", potential_urls)
+            # Get bz2 file name
+            bz2_pattern_codes = pattern_codes[1]
+
+            hour_list = [str(h).zfill(2) for h in range(0,24)] if(hour == None) else [hour]
+            
+            minute_list = [str(m).zfill(2) for m in range(0,60)] if(minute == None) else [minute]
+
+            for bz2_pattern_code in bz2_pattern_codes:
+                for hour_ in hour_list:
+                    for minute_ in minute_list:
+                        bz2_file = bz2_pattern_decrypt(bz2_pattern_code, year, month, day, hour_, minute_)
+                        potential_urls.append(f"{base_url}/{tar_file}/{bz2_file}")
+
 
     return potential_urls
 
@@ -121,7 +142,7 @@ def read_compressed_json(url):
 # Example usage
 
 def get_tweets(year, month, day = None, hour = None, minute = None):
-    urls = get_download_urls_using_stored_data_on_github(year, month, day, hour, minute)
+    urls = get_download_urls(year, month, day, hour, minute)
     json_data = {}
     for url in urls:
         json_data[url] = read_compressed_json(url)
