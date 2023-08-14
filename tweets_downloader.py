@@ -60,7 +60,7 @@ def get_download_urls(year, month, day = None, hour = None, minute = None):
 
     year, month, day, hour, minute = format_to_string(year, month, day, hour, minute)
     
-    url_pattern_encrypted_data = json.load(open("year_month_encrypt.json", "r"))
+    url_pattern_encrypted_data = json.load(open("url_patterns.json", "r"))
 
     if(year not in url_pattern_encrypted_data):
         return []

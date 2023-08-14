@@ -141,9 +141,6 @@ for year in data.keys():
             else:
                 tar_patterns[year][month][pattern].append(values)
 
-with open('tar_patterns.json', 'w') as f:
-    json.dump(tar_patterns, f)
-
 
 year_months = {}
 

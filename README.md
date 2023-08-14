@@ -1,9 +1,13 @@
 # JSON files urls of Twitter Stream collection
 A collection of urls to the compressed JSON files tweets on the Twitter Stream Archive. https://archive.org/details/twitterstream
 
+## Program
+The program includes the `tweet_downloader.py` file, the `url_patterns.json` file.
+If you want to use the program, you can just download the `tweet_downloader.py` file and the `url_patterns.json` file.
+
 ## How to use this program
 
-You can use this dataset and the functions in `usage.py` to scrape tweets from https://archive.org/details/twitterstream
+You can use this dataset and the functions in `tweet_downloader.py` to scrape tweets from https://archive.org/details/twitterstream
 
 You can use the `get_download_urls` to get the urls of the compressed `.json.bz2` and `.json.gz` files that can contains the tweets in a specific year, month, day, hour, minute.
 
