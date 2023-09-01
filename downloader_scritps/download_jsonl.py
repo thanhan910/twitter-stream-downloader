@@ -4,6 +4,9 @@ import gzip
 from urllib.request import urlopen
 
 def get_data_from_compressed_jsonl(url):
+    '''
+    Downloads and extracts data from a compressed jsonl file on the Internet Archive Twitter Stream collection.
+    '''
     try:
         with urlopen(url) as response:
             if url.endswith('.json.bz2'):
