@@ -121,6 +121,10 @@ def bz2_pattern_decrypt(pattern_code, year, month, day, hour, minute):
 def get_download_url(year, month, day, hour, minute):
     '''
     Returns the url to download the jsonl file for a given time.
+
+    The time range is from 2011-09-01 00:00:00 to 2022-11-22 23:59:00.
+
+    Be aware that the filename with the year, month, day, hour and minute in the name does not necessarily contain the actual tweets posted at that time.
     '''
 
     pattern_codes = get_url_pattern_code(year, month, day, hour, minute)
@@ -143,4 +147,3 @@ def get_download_url(year, month, day, hour, minute):
     return f"https://archive.org/download/{base_file}/{tar_file}/{bz2_file}"
 
 
-print(get_download_url(2022, 11, 1, 0, 0))
