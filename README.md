@@ -9,3 +9,5 @@ In this research, we scrape the Twitter Stream Collection page to get the downlo
 However, having to use this folder as part of the downloader program will be inconvenient. Therefore, we tried to recognize the pattern of the download URLs and use the pattern to generate the download URLs. The result is the `get_download_url.py` file.
 
 All scripts used in this research are in the `scripts` folder.
+
+The source of this repository is available at: https://github.com/thanhan910/twitter-stream-downloader
